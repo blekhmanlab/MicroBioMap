@@ -4,29 +4,58 @@
     # Returns a data.table listing all versions and the necessary URLs
     # This requires the canonical_doi configuration value stored in
     # constants.R, which always resolves to the most recent version.
-    
+
     # Check if we've already cached the manifest.
     # If not, make an HTTP call to get the URL we need
     rpath <- BiocFileCache::bfcquery(bfc, 'manifest')$rpath
     if(length(rpath) == 0) {
-      print('Retrieving version information.')
+      if(verbose) {
+        print('Retrieving version information.')
+      }
       resolve <- curl::curl_fetch_memory(canonical_doi)
-      print('Determined data address:')
-      print(resolve$url)
+      if(resolve$status_code != 200) {
+        stop(paste0(
+          'Could not resolve canonical DOI. Status code: ',
+          resolve$status_code
+        ))
+      }
+
+      if(verbose) {
+        print('Determined data address:')
+        print(resolve$url)
+      }
       manifest <- paste0(resolve$url, '/files/manifest.csv')
-      rpath <- bfcrpath(bfc, manifest)
+
+      results <- tryCatch(
+        {
+          rpath <- bfcrpath(bfc, manifest)
+          data.table::fread(rpath)
+        },
+        error = function(msg){
+          # If the manifest file is unavailable for some reason, fall back to 1.1.0,
+          # the last version of the compendium that didn't include one
+
+          print('Could not retrieve manifest file. Falling back to compendium v1.1.0')
+
+          data.table::data.table(
+            version = c('1.1.0'),
+            zenodo_id = c('13733642'),
+            default = c(TRUE)
+          )
+        }
+      )
     }
     else {
       if(verbose) {
         print('Cached version information found.')
       }
     }
-    results <- data.table::fread(rpath)
+
+
     colnames(results) <- c('version','zenodo_id','default')
     results$data_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/taxonomic_table.csv.gz')
     results$coldata_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/sample_metadata.tsv')
     data.table::setkey(results, version)
-    
     results
 }
 
