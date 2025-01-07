@@ -26,22 +26,25 @@
       }
       manifest <- paste0(resolve$url, '/files/manifest.csv')
 
-      results <- tryCatch(
+      rpath <- tryCatch(
         {
-          rpath <- bfcrpath(bfc, manifest)
-          data.table::fread(rpath)
+          bfcrpath(bfc, manifest)
         },
         error = function(msg){
           # If the manifest file is unavailable for some reason, fall back to 1.1.0,
-          # the last version of the compendium that didn't include one
+          # the last version of the compendium that didn't include one, and save
 
           print('Could not retrieve manifest file. Falling back to compendium v1.1.0')
-
-          data.table::data.table(
+          towrite <- data.table::data.table(
             version = c('1.1.0'),
             zenodo_id = c('13733642'),
             default = c(TRUE)
           )
+          # we save this to the cache so the app remembers not to keep looking online
+          # for a manifest every time the version information is needed
+          savepath <- bfcnew(bfc, 'manifest', ext='.csv')
+          data.table::fwrite(towrite, file=savepath)
+          savepath
         }
       )
     }
@@ -50,7 +53,7 @@
         print('Cached version information found.')
       }
     }
-
+    results <- data.table::fread(rpath)
 
     colnames(results) <- c('version','zenodo_id','default')
     results$data_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/taxonomic_table.csv.gz')
