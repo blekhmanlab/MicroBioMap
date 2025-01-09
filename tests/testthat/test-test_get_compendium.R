@@ -1,6 +1,6 @@
 test_that("getting compendium with defaults works as expected", {
     skip_on_ci()
-    cpd <- getCompendium()
+    cpd <- getCompendium(bfc = testbfc)
     expect_s4_class(cpd, "TreeSummarizedExperiment")
     expect_gt(nrow(cpd), 1000)
     expect_gt(ncol(cpd), 168000)
@@ -12,7 +12,7 @@ test_that("getting compendium with defaults works as expected", {
 
 test_that("getting compendium with specified version works as expected", {
     skip_on_ci()
-    cpd <- getCompendium('1.0.0')
+    cpd <- getCompendium('1.0.0', bfc = testbfc)
     expect_s4_class(cpd, "TreeSummarizedExperiment")
     expect_gt(nrow(cpd), 1000)
     expect_gt(ncol(cpd), 1000)

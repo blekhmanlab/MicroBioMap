@@ -42,7 +42,7 @@
           )
           # we save this to the cache so the app remembers not to keep looking online
           # for a manifest every time the version information is needed
-          savepath <- bfcnew(bfc, 'manifest', ext='.csv')
+          savepath <- BiocFileCache::bfcnew(bfc, 'manifest', ext='.csv')
           data.table::fwrite(towrite, file=savepath)
           savepath
         }
@@ -87,7 +87,7 @@
 #' @import TreeSummarizedExperiment
 #' @import R.utils
 #' @import ape
-#' @importFrom BiocFileCache BiocFileCache bfcrpath bfcquery
+#' @importFrom BiocFileCache BiocFileCache bfcrpath bfcquery bfcnew
 #'
 #' @export
 #'
