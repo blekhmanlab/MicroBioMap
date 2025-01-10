@@ -31,14 +31,11 @@
           bfcrpath(bfc, manifest)
         },
         error = function(msg){
-          # If the manifest file is unavailable for some reason, fall back to 1.1.0,
-          # the last version of the compendium that didn't include one, and save
-
-          print('Could not retrieve manifest file. Falling back to compendium v1.1.0')
+          print('Could not retrieve manifest file. Falling back to manifest as of v1.1.0')
           towrite <- data.table::data.table(
-            version = c('1.1.0'),
-            zenodo_id = c('13733642'),
-            default = c(TRUE)
+            version = c('1.1.0', '1.0.1'),
+            zenodo_id = c('13733642', '10452633'),
+            default = c(TRUE, FALSE)
           )
           # we save this to the cache so the app remembers not to keep looking online
           # for a manifest every time the version information is needed
