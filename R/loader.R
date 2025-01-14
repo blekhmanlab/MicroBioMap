@@ -1,13 +1,73 @@
+.getVersions <- function(bfc, verbose=FALSE) {
+    # Determines the most recent version of the compendium
+    # and retrieves the manifest that describes all available releases.
+    # Returns a data.table listing all versions and the necessary URLs
+    # This requires the canonical_doi configuration value stored in
+    # constants.R, which always resolves to the most recent version.
+
+    # Check if we've already cached the manifest.
+    # If not, make an HTTP call to get the URL we need
+    rpath <- BiocFileCache::bfcquery(bfc, 'manifest')$rpath
+    if(length(rpath) == 0) {
+      if(verbose) {
+        print('Retrieving version information.')
+      }
+      resolve <- curl::curl_fetch_memory(canonical_doi)
+      if(resolve$status_code != 200) {
+        stop(paste0(
+          'Could not resolve canonical DOI. Status code: ',
+          resolve$status_code
+        ))
+      }
+
+      if(verbose) {
+        print('Determined data address:')
+        print(resolve$url)
+      }
+      manifest <- paste0(resolve$url, '/files/manifest.csv')
+
+      rpath <- tryCatch(
+        {
+          bfcrpath(bfc, manifest)
+        },
+        error = function(msg){
+          print('Could not retrieve manifest file. Falling back to manifest as of v1.1.0')
+          towrite <- data.table::data.table(
+            version = c('1.1.0', '1.0.1'),
+            zenodo_id = c('13733642', '10452633'),
+            default = c(TRUE, FALSE)
+          )
+          # we save this to the cache so the app remembers not to keep looking online
+          # for a manifest every time the version information is needed
+          savepath <- BiocFileCache::bfcnew(bfc, 'manifest', ext='.csv')
+          data.table::fwrite(towrite, file=savepath)
+          savepath
+        }
+      )
+    }
+    else {
+      if(verbose) {
+        print('Cached version information found.')
+      }
+    }
+    results <- data.table::fread(rpath)
+
+    colnames(results) <- c('version','zenodo_id','default')
+    results$data_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/taxonomic_table.csv.gz')
+    results$coldata_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/sample_metadata.tsv')
+    data.table::setkey(results, version)
+    results
+}
+
 .getCompendiumData <- function(version, bfc) {
-    print(paste('Retrieving compendium version',version))
-    url <- .data_url[[version]]
-    rpath <- bfcrpath(bfc, url)
+    versions <- .getVersions(bfc)
+    rpath <- bfcrpath(bfc, versions[version]$data_url)
     data.table::fread(rpath)
 }
 
 .getCompendiumColdata <- function(version, bfc) {
-    url <- .coldata_url[[version]]
-    rpath <- bfcrpath(bfc, url)
+    versions <- .getVersions(bfc)
+    rpath <- bfcrpath(bfc, versions[version]$coldata_url)
     sampdat <- as.data.frame(data.table::fread(rpath))
     rownames(sampdat) <- paste(sampdat[[2]], sampdat[[3]], sep = "_")
     sampdat
@@ -19,12 +79,12 @@
 #'
 #' @returns a `TreeSummarizedExperiment`
 #'
-#' @importFrom data.table fread
+#' @importFrom data.table fread setkey
 #' @importClassesFrom Matrix TsparseMatrix
 #' @import TreeSummarizedExperiment
 #' @import R.utils
 #' @import ape
-#' @importFrom BiocFileCache BiocFileCache bfcrpath
+#' @importFrom BiocFileCache BiocFileCache bfcrpath bfcquery bfcnew
 #'
 #' @export
 #'
@@ -37,7 +97,15 @@
 #' head(colData(cpd))
 #'
 
-getCompendium <- function(version='1.0.1', bfc = BiocFileCache::BiocFileCache()) {
+getCompendium <- function(version=NA, bfc = BiocFileCache::BiocFileCache()) {
+    versions <- .getVersions(bfc)
+
+    if(is.na(version)) {
+        # If the user has not specified a version, grab whichever
+        # is indicated in the manifest as the default (i.e. most recent)
+        version <- versions[versions$default,]$version[1]
+    }
+    print(paste('Retrieving compendium version',version))
     dat <-.getCompendiumData(version, bfc)
     coldat <- .getCompendiumColdata(version, bfc)
 
