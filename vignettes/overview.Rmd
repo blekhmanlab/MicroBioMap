@@ -70,7 +70,7 @@ et al. 2013; McLaren and Callahan 2021).
 
 ```{r eval=FALSE}
 library(BiocManager)
-BiocManager::install("seandavi/MicroBioMap")
+BiocManager::install("blekhmanlab/MicroBioMap")
 ```
 
 ## Basic usage
@@ -121,7 +121,7 @@ head(sort(table(colData(cpd)$geo_loc_name), decreasing = TRUE))
 ### Microbe (row) metadata
 
 Each row in `cpd` represents one microbe. The `rowData` contains a data.frame-
-like set of metadata with columns `kingdom`, `phylum`, etc. 
+like set of metadata with columns `kingdom`, `phylum`, etc.
 
 ```{r}
 head(rowData(cpd))
@@ -154,7 +154,7 @@ cpd_sub_by_project_ids
 ### Samples from a specific world region
 
 To select a subset of samples from a specific world region, subset by the
-"columns" of the dataset. The following code ummarized the regions are 
+"columns" of the dataset. The following code ummarized the regions are
 available and the number of samples in each region.
 
 ```{r}
@@ -176,7 +176,7 @@ available and the number of samples in each country.
 ```{r}
 library(forcats)
 library(ggplot2)
-ggplot(as.data.frame(colData(cpd)), 
+ggplot(as.data.frame(colData(cpd)),
     aes(x = fct_infreq(iso))) +
     geom_bar(stat='count') +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -207,8 +207,8 @@ ggplot(as.data.frame(colData(cpd)), aes(x = log10(total_bases))) +
 
 There are over 4000 microbes represented in the compendium. Some are fairly rare
 and we may want to subset the compendium to only those with a specific
-bug in the sample. Here, we pick an arbitrary examplar to show just the 
-mechanics. 
+bug in the sample. Here, we pick an arbitrary examplar to show just the
+mechanics.
 
 ```{r}
 shig_cpd_counts = counts(cpd)['Bacteria.Proteobacteria.Gammaproteobacteria.Enterobacterales.Enterobacteriaceae.Escherichia-Shigella',]
@@ -220,7 +220,7 @@ Examine the distribution of abundance across all samples in the compendium.
 hist(log10(shig_cpd_counts))
 ```
 Picking an arbitrary threshold (after all, this is only an example), we can
-limit samples to those with plenty of our bacteria of interest present. 
+limit samples to those with plenty of our bacteria of interest present.
 
 ```{r}
 shig_cpd <- cpd[, log10(shig_cpd_counts)>2]
