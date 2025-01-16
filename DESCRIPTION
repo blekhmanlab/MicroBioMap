@@ -19,14 +19,15 @@ Imports:
     R.utils
 Encoding: UTF-8
 Authors@R:
-    c(person("Sean", "Davis",
-      role = c("aut"),
-      email='seandavi@gmail.com',
-      comment=c(ORCID='0000-0002-8991-6458')),
+    c(
       person("Richard", "Abdill",
       role = c("aut", "cre"),
       email='rabdill@uchicago.edu',
       comment=c(ORCID='0000-0001-9565-5832')),
+      person("Sean", "Davis",
+      role = c("aut"),
+      email='seandavi@gmail.com',
+      comment=c(ORCID='0000-0002-8991-6458')),
       person("Ran", "Blehkman",
       role=c('aut'),
       comment=c(ORCID='0000-0003-3218-613X')),
