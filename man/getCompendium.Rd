@@ -4,7 +4,7 @@
 \alias{getCompendium}
 \title{load all compendium data into a TreeSummarizedExperiment}
 \usage{
-getCompendium(bfc = BiocFileCache::BiocFileCache())
+getCompendium(version = NA, bfc = BiocFileCache::BiocFileCache())
 }
 \arguments{
 \item{bfc}{BiocFileCache object to use}

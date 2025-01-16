@@ -1,4 +1,4 @@
-url: https://seandavi.github.io/MicroBioMap/
+url: https://blekhmanlab.github.io/MicroBioMap/
 template:
   bootstrap: 5
   bootswatch: spacelab
@@ -9,4 +9,4 @@ navbar:
   components:
     github:
       icon: fa-github
-      href: http://github.com/seandavi/MicroBioMap
+      href: http://github.com/blekhmanlab/MicroBioMap
