@@ -211,7 +211,7 @@ bug in the sample. Here, we pick an arbitrary examplar to show just the
 mechanics.
 
 ```{r}
-shig_cpd_counts = counts(cpd)['Bacteria.Proteobacteria.Gammaproteobacteria.Enterobacterales.Enterobacteriaceae.Escherichia-Shigella',]
+shig_cpd_counts = counts(cpd)['Bacteria.Bacillota.Clostridia.Eubacteriales.Alkalibacteraceae.Alkalibaculum',]
 ```
 
 Examine the distribution of abundance across all samples in the compendium.
