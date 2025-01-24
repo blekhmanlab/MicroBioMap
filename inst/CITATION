@@ -1,0 +1,12 @@
+citHeader("If MicroBioMap or the Human Microbiome Compendium has played a role in your publication, please cite our paper:")
+
+bibentry(
+  bibtype = "Article",
+  title = 'Integration of 168,000 samples reveals global patterns of the human gut microbiome',
+  journal = 'Cell',
+  author = as.person('R J Abdill, S P Graham, V Rubinetti, M Ahmadian, P Hicks, A Chetty, D McDonald, P Ferretti, E Gibbons, M Rossi, A Krishan, F W Albert, C S Greene, S Davis, R Blekhman'),
+  year = 2025,
+  doi = '10.1016/j.cell.2024.12.017',
+  volume='188',
+  issue='4'
+)
