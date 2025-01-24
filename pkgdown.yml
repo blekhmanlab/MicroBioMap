@@ -1,10 +1,9 @@
-pandoc: 3.0.1
-pkgdown: 2.0.7
+pandoc: '3.2'
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   overview: overview.html
-last_built: 2023-09-08T18:42Z
+last_built: 2025-01-24T01:19Z
 urls:
-  reference: https://seandavi.github.io/MicroBioMap/reference
-  article: https://seandavi.github.io/MicroBioMap/articles
-
+  reference: https://blekhmanlab.github.io/MicroBioMap/reference
+  article: https://blekhmanlab.github.io/MicroBioMap/articles
