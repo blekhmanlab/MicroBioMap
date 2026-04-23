@@ -58,9 +58,10 @@
           print('Could not retrieve manifest file. Falling back to manifest as of April 2026.')
           towrite <- data.table::data.table(
             version = c('1.1.0', '1.0.1'),
-            zenodo_id = c('13733642', '10452633'),
+            zenodo_id = c('13733642', '10452633')
+          )
           if(entry == 'projection') {
-            print('Falling back to projection manifest.'
+            print('Falling back to projection manifest.')
             towrite <- data.table::data.table(
               version = c('0.2.0', '0.1.0'),
               zenodo_id = c('19633215', '19631961'),
@@ -86,6 +87,10 @@
     colnames(results) <- c('version','zenodo_id','default')
     results$data_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/taxonomic_table.csv.gz')
     results$coldata_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/sample_metadata.tsv')
+    if(entry == 'projection') {
+      results$data_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/loadings.txt')
+      results$coldata_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/sample_metadata.tsv')
+    }
     data.table::setkey(results, version)
     results
 }

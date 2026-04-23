@@ -13,7 +13,30 @@ library(vegan)
   return(answer)
 }
 
-.loadUserData <- function(userdata, usertaxa, seed=NA) {
+.loadProjection <- function(pname, load_all) {
+  load_all |>
+    filter(projection==pname) |>
+    mutate(taxon = paste(kingdom,phylum,class,order,family, sep='||')) # TODO: use numbers for this instead
+}
+
+projection_library <- function(bfc = BiocFileCache::BiocFileCache()) {
+  versions <- .getVersions(bfc, 'projection')
+
+  if(is.na(version)) {
+    # If the user has not specified a version, grab whichever
+    # is indicated in the manifest as the default (i.e. most recent)
+    version <- versions[versions$default,]$version[1]
+  }
+  print(paste('Retrieving projections version',version))
+  load_all <- .getProjectData(version, 'projection', bfc)
+
+  curried <- function(pname) {
+    .loadProjection(pname, load_all)
+  }
+  curried
+}
+
+loadUserData <- function(userdata, usertaxa, seed=NA) {
     if(!is.na(seed)) set.seed(seed)
 
     userdata |>
@@ -53,12 +76,6 @@ library(vegan)
         rownames_to_column('sample')
 }
 
-.loadProjection <- function(pname, load_all) {
-  load_all |>
-    filter(projection==pname) |>
-    mutate(taxon = paste(kingdom,phylum,class,order,family, sep='||')) # TODO: use numbers for this instead
-}
-
 project_it <- function(indata, loadings) {
     indata |>
         pivot_longer(cols=!c(sample)
@@ -68,7 +85,8 @@ project_it <- function(indata, loadings) {
         ) |>
         left_join(loadings, by='taxon') |>
         mutate(
-          across(starts_with('PC'), \(d) val * d)
+          across(starts_with('PC')
+          , \(d) val * d)
         ) |>
         ungroup() |>
         group_by(sample) |>
