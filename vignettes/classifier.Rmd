@@ -1,0 +1,155 @@
+---
+title: "Projection Recipes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Recipes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This page describes examples of using microbiome data projected using the Compendium Explorer web app and R helpers.
+
+More *tk
+
+### Setup
+
+See the Projection vignette for the process to generate a data table in which each row is a sample and each column is a principal component, as defined by your selected projection:
+
+```r
+my_results <- project_it(taxtable, plib('full'))
+```
+
+Loading libraries, setting up helper functions
+```r
+library(data.table)
+library(ranger)
+library(tibble)
+
+library(dplyr)
+library(tidyr)
+
+fetchmeta.curried <- function(meta) {
+  # generates a function that always appends the same metadata to a
+  # taxonomic table
+  
+  toreturn <- function(ids, append=NA) {
+    # Helper function for adding sample-level metadata to a table
+    # of read counts
+    if(!is.na(append)) ids$sample <- append
+  
+    toreturn <- ids |>
+      inner_join(meta, by='sample') |>
+      mutate(
+        Community_Group = as.factor(Community_Group)
+        , Lifestyle = as.factor(Lifestyle)
+      )
+  
+    toreturn
+  }
+}
+
+dropmeta <- function(df, save = c()) {
+  # Cleave the metadata off a data table, leaving only the read counts
+  toreturn <- df |>
+    select(save, !colnames(my_meta))
+
+  toreturn
+}
+
+scoremodel <- function(calls, modelname) {
+  # Fll in the confusion matrix with diagonal values;
+  # expects a data frame with two columns:
+  # baseline - the true classes for a given test set
+  # pred - the predicted calls
+  
+  half <- calls |>
+    mutate(
+      correct = pred==baseline
+    ) |>
+    group_by(baseline) |>
+    summarise(
+      TP = sum(correct)
+      , total = n()
+    ) |>
+    mutate(
+      FN = total - TP
+    ) |>
+    arrange(baseline) |>
+    mutate(matchup = rev(baseline))   # this just adds a column to show which values we want to look up
+  
+  half |> # Fill in the other half of the confusion matrix
+    inner_join(half
+               , by=c('baseline'='matchup')
+               , suffix = c('', 'new')
+    ) |>
+    select(baseline, TP, FN
+     , TN=TPnew
+     , FP=FNnew) |>
+    mutate(model=modelname
+      , Precision = TP / (TP + FP) # How many of the positive calls are true?
+      , Recall = TP / (TP + FN)  # How many group members were ID'd?
+      , PPV = Precision
+      , FDR = 1 - PPV
+      , F1 = (2 * Precision * Recall) / (Precision + Recall)
+      , Sensitivity = Recall         # How many group members were ID'd?
+      , Specificity = TN / (TN + FP) # How many non-members were excluded?
+      , Accuracy = (TP + TN) / (TP + TN + FP + FN) # How many of the classifications were right?
+    )
+}
+```
+
+### Classifier
+
+This trains a random forest classifier on a subset of your samples (`trainer`) and uses it to generate predictions of a single variable (`dependent`) for a different subset of samples (`tester`).
+
+```r
+classify_it <- function(trainer, tester, dependent) {
+  # trainer - training set
+  # tester - test set
+  # dependent - string indicating the name of the dependent variable, i.e. the
+  #             one to predict
+  # key - list of the correct classificatiosn for the test set
+  
+  print(paste0('dimensions=', ncol(trainer)))
+
+  rf = ranger(dependent.variable.name=dependent, data = (trainer)
+              , num.trees = 800
+              , sample.fraction = 0.5
+  )
+
+  
+  test_prediction <- predict(rf, tester)$predictions |>
+    as.data.frame() |>
+    rename(pred = "predict(rf, tester)$predictions")
+  
+  test_prediction
+}
+```
+
+Set up all our data frames. First, we select the first 25 (projected) principal components and separate out one community group as the test set.
+
+```r
+dataset <- my_results |>
+  select(sample, PC1:PC25)
+
+train <- dataset |>
+  fetchmeta() |>
+  filter(!Community_Group == 'Gond') |>
+  arrange(sample) |>
+  dropmeta(save=c('Lifestyle'))
+
+testset <- dataset |>
+  fetchmeta() |>
+  filter(Community_Group == 'Gond') |>
+  arrange(sample)
+```
+
+All our helpers make the actual classification statement look mundane:
+
+```r
+projected_model <- classify_it(train, testset, 'Lifestyle')
+
+projected <- scoremodel(projected_model, "projected")
+```
