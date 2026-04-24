@@ -2,7 +2,7 @@
 title: "Compendium Explorer"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Compendium}
+  %\VignetteIndexEntry{Projection}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -1,26 +1,9 @@
-#' load all compendium data into a TreeSummarizedExperiment
-#'
-#' @param bfc BiocFileCache object to use
-#'
-#' @returns a `TreeSummarizedExperiment`
-#'
 #' @importFrom data.table fread setkey
 #' @importClassesFrom Matrix TsparseMatrix
 #' @import TreeSummarizedExperiment
 #' @import R.utils
 #' @import ape
 #' @importFrom BiocFileCache BiocFileCache bfcrpath bfcquery bfcnew
-#'
-#' @export
-#'
-#' @examples
-#' cpd <- getCompendium()
-#'
-#' dim(cpd)
-#' cpd
-#' assayNames(cpd)
-#' head(colData(cpd))
-#'
 
 .getVersions <- function(bfc, entry, verbose=FALSE) {
     # Determines the most recent version of the compendium
@@ -111,6 +94,21 @@
 }
 
 getCompendium <- function(version=NA, bfc = BiocFileCache::BiocFileCache()) {
+#' load all compendium data into a TreeSummarizedExperiment
+#' @param version an optional parameter indicating which compendium version to retrieve
+#' @param bfc BiocFileCache object to use
+#'
+#' @returns a `TreeSummarizedExperiment`
+#' @export
+#'
+#' @examples
+#' cpd <- getCompendium()
+#'
+#' dim(cpd)
+#' cpd
+#' assayNames(cpd)
+#' head(colData(cpd))
+#'
     versions <- .getVersions(bfc, 'compendium')
 
     if(is.na(version)) {
