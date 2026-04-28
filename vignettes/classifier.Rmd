@@ -153,3 +153,135 @@ projected_model <- classify_it(train, testset, 'Lifestyle')
 
 projected <- scoremodel(projected_model, "projected")
 ```
+
+### Contextualizing model
+
+These scores are difficult to interpret on their own, especially because of the class imbalance in the test set. To provide some additional context, we'll also generate predictions using a zero-information model that always guesses the majority class.
+
+```r
+naive_model <- data.frame(
+  pred = rep('Urban', 97)
+  , baseline = fetchmeta(testset)$Lifestyle
+)
+
+allurbs <- scoremodel(naive_model, "naive")
+```
+
+We can also train a new model on 25 principal components, but derived from conventional PCA:
+
+```r
+my_asvs <- read.delim('~/code/pcalab/data/examples/toy/userdata.txt')
+my_taxa <- read.delim('~/code/pcalab/data/examples/toy/usertaxa.txt')
+my_meta <- read.delim('~/code/pcalab/data/examples/toy/usermeta.txt')
+
+taxtable <- loadUserData(my_asvs, my_taxa)
+
+ord <- taxtable |>
+  prcomp(
+    tol=0,
+    center=FALSE
+  )
+```
+
+As above, we can split the resulting points into train and test sets and see how well the Gond classification task works:
+
+```r
+points <- as.data.frame(ord$x) |>
+  select(PC1:PC25) |>
+  rownames_to_column('sample') |>
+  fetchmeta()
+
+data_train = points |>
+  filter(!Community_Group == 'Gond') |>
+  arrange(sample) |>
+  dropmeta(save=c('Lifestyle'))
+
+data_test = points |>
+  filter(Community_Group == 'Gond') |>
+  arrange(sample)
+
+key <- data_test$Lifestyle
+
+data_test <- data_test |>
+  dropmeta()
+
+solo_pca <- classify_it(data_train, data_test, 'Lifestyle') |>
+  scoremodel('solo_pca')
+```
+
+```r
+scores <- rbind(projected, solo_pca, allurbs) |>
+  mutate(
+    model = factor(model, levels=c('projected','solo_pca', 'naive'))
+  ) |>
+  filter(baseline == 'Urban') |>
+  select(!baseline) |>
+  pivot_longer(
+    !model, names_to='measure', values_to = 'val'
+  )
+```
+
+# PROJECTED
+matdefine <- list("Toeval" = c("correct", "wrong"),
+                  "Naive" =c("correct", "wrong"))
+
+perf.base <-  matrix(c(33, 11, 0, 32),    # TP, FN, 0, FP
+                     nrow = 2, dimnames = matdefine)
+
+perf.projected <-  matrix(c(36, 8, 0, 22),
+                          nrow = 2, dimnames = matdefine)
+mcnemar.test(perf.base)
+mcnemar.test(perf.projected)
+```
+
+```r
+# https://machinelearningmastery.com/mcnemars-test-for-machine-learning/
+
+mcnemar <- function(classes) {
+  yesno <- classes |>
+    filter(test == baseline) |>
+    filter(naive != baseline) |>
+    nrow()
+
+  noyes <- classes |>
+    filter(test != baseline) |>
+    filter(naive == baseline) |>
+    nrow()
+
+  print(paste0('yesno = ', yesno))
+  print(paste0('noyes = ', noyes))
+
+  #mcnstat <- ((yesno - noyes)^2) / (yesno + noyes)
+  mcnstat <- ((noyes - yesno - 1)^2) / (yesno + noyes)
+
+  print(paste0('stat = ', mcnstat))
+
+  print(paste0('p = '
+           , pchisq(mcnstat
+                    , df=1, lower.tail = FALSE)
+  ))
+}
+
+# ORIGINAL to naive
+compare |>
+  select(baseline, naive
+      , test=original
+  ) |>
+  mcnemar()
+
+# PROJECTED to naive
+compare |>
+  select(baseline, naive
+         , test=projected
+  ) |>
+  mcnemar()
+
+# DIRECT COMPARE
+compare |>
+  select(baseline, naive=original
+         , test=projected
+  ) |>
+  mcnemar()
+```
+
+All done here *tk*
