@@ -4,17 +4,18 @@
 #' @import R.utils
 #' @import ape
 #' @importFrom BiocFileCache BiocFileCache bfcrpath bfcquery bfcnew
-
+#' Compendium metadata retrieval
+#'
+#' Determines the most recent version of the compendium
+#' and retrieves the manifest that describes all available releases.
+#' @returns
+#' This requires the canonical_doi configuration value stored in
+#' constants.R, which always resolves to the most recent version.
+#' @param bfc BiocFileCache object to use
+#' @param entry A string from ['compendium','projection'] indicating which manifest to return.
+#' @returns a data.table listing all versions and the necessary URLs
 .getVersions <- function(bfc, entry, verbose=FALSE) {
-    # Determines the most recent version of the compendium
-    # and retrieves the manifest that describes all available releases.
-    # Returns a data.table listing all versions and the necessary URLs
-    # This requires the canonical_doi configuration value stored in
-    # constants.R, which always resolves to the most recent version.
-
-    # Check if we've already cached the manifest.
-    # If not, make an HTTP call to get the URL we need
-    rpath <- BiocFileCache::bfcquery(bfc, entry)$rpath
+    rpath <- BiocFileCache::bfcquery(bfc, entry)$rpath # check if we've already cached the manifest
     if(length(rpath) == 0) {
       if(verbose) {
         print('Retrieving version information.')
@@ -66,7 +67,7 @@
       }
     }
     results <- data.table::fread(rpath)
-
+    # TODO: This is a silly bandage
     colnames(results) <- c('version','zenodo_id','default')
     results$data_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/taxonomic_table.csv.gz')
     results$coldata_url <- paste0('https://zenodo.org/record/', results$zenodo_id, '/files/sample_metadata.tsv')
@@ -93,14 +94,12 @@
     sampdat
 }
 
-getCompendium <- function(version=NA, bfc = BiocFileCache::BiocFileCache()) {
-#' load all compendium data into a TreeSummarizedExperiment
+#' Compendium download
+#'
+#' Load all compendium data into a TreeSummarizedExperiment
 #' @param version an optional parameter indicating which compendium version to retrieve
 #' @param bfc BiocFileCache object to use
-#'
 #' @returns a `TreeSummarizedExperiment`
-#' @export
-#'
 #' @examples
 #' cpd <- getCompendium()
 #'
@@ -109,6 +108,8 @@ getCompendium <- function(version=NA, bfc = BiocFileCache::BiocFileCache()) {
 #' assayNames(cpd)
 #' head(colData(cpd))
 #'
+#' @export
+getCompendium <- function(version=NA, bfc = BiocFileCache::BiocFileCache()) {
     versions <- .getVersions(bfc, 'compendium')
 
     if(is.na(version)) {
