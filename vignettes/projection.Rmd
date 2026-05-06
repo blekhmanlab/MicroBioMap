@@ -1,0 +1,51 @@
+---
+title: "Compendium Explorer"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Projection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Overview
+
+Intro *tk
+
+## Getting started
+
+### Installation
+
+```{r eval=FALSE}
+library(BiocManager)
+BiocManager::install("blekhmanlab/MicroBioMap")
+```
+
+## Basic usage
+
+```{r message=FALSE}
+library(MicroBioMap)
+
+my_asvs <- read.delim('~/code/pcalab/data/examples/toy/userdata.txt')
+my_taxa <- read.delim('~/code/pcalab/data/examples/toy/usertaxa.txt')
+my_meta <- read.delim('~/code/pcalab/data/examples/toy/usermeta.txt')
+
+taxtable <- loadUserData(my_asvs, my_taxa)
+```
+
+*tk
+
+```{r}
+# this operation requires about 4GB of RAM
+plib <- projection_library()
+```
+
+*tk
+```{r}
+my_results <- project_it(taxtable, plib('full'))
+```
+
+## sessionInfo
+
+```{r}
+sessionInfo()
+```
