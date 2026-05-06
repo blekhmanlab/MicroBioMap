@@ -39,8 +39,9 @@
 #' projected <- project_it(my_data, projection_library('full'))
 #'
 #' @export
-projection_library <- function(bfc = BiocFileCache::BiocFileCache()) {
-  versions <- .getVersions(bfc, 'projection')
+projection_library <- function(version=NA, bfc = BiocFileCache::BiocFileCache()) {
+  versions <- .getVersions(bfc, entry='projection')
+  print(versions)
 
   if(is.na(version)) {
     # If the user has not specified a version, grab whichever
